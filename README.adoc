@@ -1,0 +1,142 @@
+= Embedded MongoDB test tools
+:icons: font
+:toc:
+:config-annotation: @EmbeddedMongoDbConfiguration
+:import-annotation: @EmbeddedMongoDbImport
+
+This project contains tools to facilitate integration of MongoDB into tests.
+Currently it only contain a link:https://github.com/junit-team/junit4/wiki/rules[JUnit] rule that allows:
+
+* Starting a MongoDB instance per test method or class.
+* Skip MongoDB initialization for specific tests.
+* Initializing MongoDB with custom data from json files located in the classpath.
+
+== Introduction
+
+This project aims to facilitate a light-weight integration of MongoDB data into unit and integration tests.
+It uses the popular link:https://github.com/flapdoodle-oss/de.flapdoodle.embed.mongo[Embedded MongoDB] to start a local instance of a MongoDB database for each test method or class.
+
+If you are looking for similar tools, you can also try:
+
+MongoDB JUnit Test Rule (link:https://github.com/bertramn/mongodb-junit-test[repo], by link:https://github.com/bertramn[@bertramn])::
+Similar approach to this project.
+That is, a JUnit rule.
+
+test-rule-embedded-mongodb (link:https://github.com/patrykpacewicz/test-rule-embedded-mongodb[repo], by link:https://github.com/patrykpacewicz[@patrykpacewicz])::
+Also, similar approach to this project, JUnit rule.
+
+NoSQLUnit (link:https://github.com/lordofthejars/nosql-unit[repo], (by link:https://github.com/lordofthejars[Alex Soto])::
+Extensive solution to test not only MongoDB, but other NoSQL databases like Couchbase, Cassandra, Neo4j... +
+You should check this out if you are looking for a full solution with a wide range of features.
+
+Spring Factory Bean for EmbedMongo (link:https://github.com/jirutka/embedmongo-spring[repo] by link:https://github.com/jirutka[Jakub Jirutka])::
+Handy MongoDB Bean factory to add an embedded MongoDB instance in a Spring Context.
+
+Since none of the above options meet all desired features, this project was created.
+*Free free to comment or contribute in any way.*
+
+== EmbeddedMongoDb Junit Rule
+
+[NOTE]
+====
+If you are using Spring/Spring-Boot, Junit Rules are initialized after Spring Test Context.
+That means that if a MongoDB connection is attempted during Spring intialitzation, it will fail.
+Check `Spring Factory Bean for EmbedMongo` in the <<Introduction>> section for more info.
+====
+
+=== Usage
+
+The simplest way to enable an embedded MongoDB instance for tests is adding is a `@Rule`.
+
+Just add the rule initialization at the beginning of the test class.
+
+[source,java]
+----
+@Rule
+public EmbeddedMongoDb embeddedMongoDb = new EmbeddedMongoDb();
+----
+
+This will start a new clean MongoDB instance for each test method in the class.
+
+If you wan to start a shared MongoDB instance for all tests in a class, use the `@ClassRule`.
+
+[source,java]
+----
+@ClassRule
+public static EmbeddedMongoDb embeddedMongo = new EmbeddedMongoDb();
+----
+
+=== Configuration
+
+The rule is accompanied by two annotations to add additional configuration to each test: `{config-annotation}` and `{import-annotation}`.
+
+
+==== {config-annotation}
+
+`{config-annotation}` allows customizing the MongoDB instance main aspects.
+This annotation is optional and if not set it uses the default values show below.
+
+Available options are:
+
+[horizontal]
+skip (boolean):: test should not start a embedded MongoDB process. (default `false`).
+database (string):: name of the collection to use (default `local`).
+collection (string):: name of the collection to create (default `embedded-test-collection`).
+
+[source,java,subs=attributes+]
+.Skip configuration example
+----
+{config-annotation}(skip = true)
+@Test
+public void should_connect_to_database() {
+    // given
+    final StringBuilder sb = new StringBuilder("Hello");
+    // when:
+    sb.append(" World!!");
+    // then
+    assertThat(sb.toString()).isEqualTo("Hello World!!");
+}
+----
+
+When using a `@ClassRule`, `{config-annotation}` must be applied to the class, not the method.
+Also note that enabling `skip` at class level will totally disable the rule.
+
+[IMPORTANT]
+====
+Configuration provider must be aligned with the Embedded MongoDB configuration.
+That is, must point to a `127.0.0.1` MongoDB with password-less access.
+Also, the database and collection must match the ones set by `{config-annotation}`, be it default or custom.
+====
+
+==== {import-annotation}
+
+The import annotation allows importing JSON formatted data from a file located in the project classpath.
+Same as `{config-annotation}`, it can be applied to a method or class depending on whether the rule has been applied as `@Rule` or `@ClassRule`.
+
+Available options are:
+
+[horizontal]
+file (string):: relative path to a JSON file located in the classpath. (default `""`).
+jsonArray (boolean):: enables support to load data in JSON array format.
+By default, data can be format as individual JSON documents, no need for comas or brackets (default `false`).
+
+[NOTE]
+====
+Options match the functionality of original mongoimport` tool:.
+In case of doubt, reference to https://docs.mongodb.com/manual/reference/program/mongoimport/.
+====
+
+[source,java,subs=attributes+]
+.File data import example
+----
+{import-annotation}(file = "data.json")
+@Test
+public void should_connect_to_database() {
+    // given
+    final StringBuilder sb = new StringBuilder("Hello");
+    // when:
+    sb.append(" World!!");
+    // then
+    assertThat(sb.toString()).isEqualTo("Hello World!!");
+}
+----

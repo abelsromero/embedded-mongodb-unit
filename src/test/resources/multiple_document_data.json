@@ -1,0 +1,10 @@
+{
+  _id: "c54kriewznasxf4scu5ylbnzve",
+  description: "this is a simple json document to be used with mongo import",
+  timestamp: 1343779200000
+}
+{
+  _id: "vm6wo36mtjck7l65mfyrj64gg4",
+  description: "this is anotehr simple json document to be used with mongo import",
+  timestamp: 1343782200000
+} 
