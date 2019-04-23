@@ -18,4 +18,11 @@ class AnnotationHelper {
             .getDefaultValue();
     }
 
+    @SneakyThrows
+    public static Integer getDefaultIntValue(final Class<?> annotation, final String methodName) {
+        return (Integer) annotation
+            .getDeclaredMethod(methodName)
+            .getDefaultValue();
+    }
+
 }

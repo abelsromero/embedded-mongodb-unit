@@ -39,7 +39,24 @@ public class EmbeddedMongoDbTest {
     }
 
     @Test
-    public void should_not_start_mongodb_start_if_annotated_with_mongo_skip() {
+    public void should_start_a_mongodb_instance_on_a_non_default_port() {
+        // setup
+        final PrintStream originalOut = System.out;
+        final ByteArrayOutputStream newOut = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(newOut));
+        // given
+        final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
+        // when
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().nonStandardPortAnnotation()));
+        // then
+        assertThat(newOut.toString()).contains("waiting for connections on port");
+        // cleanup
+        mongo.finished(null);
+        System.setOut(originalOut);
+    }
+
+    @Test
+    public void should_not_start_mongodb_instance_if_annotated_with_mongo_skip() {
         // setup
         final PrintStream originalOut = System.out;
         final ByteArrayOutputStream newOut = new ByteArrayOutputStream();
@@ -103,7 +120,6 @@ public class EmbeddedMongoDbTest {
         // given
         final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
         // when
-
         mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().importMultipleJsonInArrayTrueAnnotation()));
         // then
         final MongoCollection<Document> collection = getDefaultCollection();

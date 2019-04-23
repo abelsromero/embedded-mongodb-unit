@@ -18,4 +18,6 @@ public @interface EmbeddedMongoDbConfiguration {
 
     String collection() default "embedded-test-collection";
 
+    int port() default 27017;
+
 }

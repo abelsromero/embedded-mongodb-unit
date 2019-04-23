@@ -53,40 +53,49 @@ public class TestAnnotations {
         @EmbeddedMongoDbImport(file = "non_existent_file.json")
         void nonExistentFile() {
         }
+
+        @EmbeddedMongoDbConfiguration(port = 10259)
+        void nonStandardPort() {
+        }
     }
 
     @SneakyThrows
     public EmbeddedMongoDbConfiguration skinAnnotation() {
-        return FakeTestClass.class.getDeclaredMethod("skip").getAnnotation(EmbeddedMongoDbConfiguration.class);
+        return getConfigurationAnnotationFrom("skip");
     }
 
+    public EmbeddedMongoDbConfiguration nonStandardPortAnnotation() {
+        return getConfigurationAnnotationFrom("nonStandardPort");
+    }
 
     public EmbeddedMongoDbImport importSingleJsonAnnotation() {
         return getImportAnnotationFrom("importSingleDocument");
     }
 
-
     public EmbeddedMongoDbImport importMultipleJsonAnnotation() {
         return getImportAnnotationFrom("importMultipleDocuments");
     }
-
 
     public EmbeddedMongoDbImport importMultipleJsonInArrayAnnotation() {
         return getImportAnnotationFrom("importMultipleDocumentsInArray");
     }
 
-
     public EmbeddedMongoDbImport importMultipleJsonInArrayTrueAnnotation() {
         return getImportAnnotationFrom("importMultipleDocumentsInArrayTrue");
     }
-
 
     public EmbeddedMongoDbImport nonExistentFileAnnotation() {
         return getImportAnnotationFrom("nonExistentFile");
     }
 
     @SneakyThrows
+    private EmbeddedMongoDbConfiguration getConfigurationAnnotationFrom(String methodName) {
+        return FakeTestClass.class.getDeclaredMethod(methodName).getAnnotation(EmbeddedMongoDbConfiguration.class);
+    }
+
+    @SneakyThrows
     private EmbeddedMongoDbImport getImportAnnotationFrom(String methodName) {
         return FakeTestClass.class.getDeclaredMethod(methodName).getAnnotation(EmbeddedMongoDbImport.class);
     }
+
 }
