@@ -15,14 +15,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 
-import static org.abelsromero.embedded.mongo.AnnotationHelper.getDefaultBooleanValue;
-import static org.abelsromero.embedded.mongo.AnnotationHelper.getDefaultStringValue;
+import static org.abelsromero.embedded.mongo.AnnotationHelper.*;
 
 public class EmbeddedMongoDb extends TestWatcher {
 
     private static final String BIND_IP = "127.0.0.1";
-    // TODO make port configurable through EmbeddedMongoDbConfiguration
-    private static final int PORT = 27017;
 
     private MongodExecutable executable;
 
@@ -41,16 +38,17 @@ public class EmbeddedMongoDb extends TestWatcher {
             return;
         }
         // Start MongoDB
+        int port = port(mongoConfiguration);
         executable = MongodStarter
             .getDefaultInstance()
-            .prepare(buildMongoConfig());
+            .prepare(buildMongoConfig(port));
         executable.start();
 
         databaseName = databaseName(mongoConfiguration);
         collectionName = collectionName(mongoConfiguration);
 
         if (mongoConfiguration != null) {
-            db = new MongoClient("localhost", PORT)
+            db = new MongoClient("localhost", port)
                 .getDatabase(mongoConfiguration.database());
             db.createCollection(collectionName);
         }
@@ -59,7 +57,7 @@ public class EmbeddedMongoDb extends TestWatcher {
             description.getAnnotation(EmbeddedMongoDbImport.class);
 
         if (mongoImport != null && mongoImport.file().length() > 0) {
-            startMongoImport(BIND_IP, PORT, databaseName, collectionName,
+            startMongoImport(BIND_IP, port, databaseName, collectionName,
                 mongoImport.file(),
                 mongoImport == null ? getDefaultBooleanValue(EmbeddedMongoDbImport.class, "jsonArray") : mongoImport.jsonArray()
             );
@@ -108,6 +106,13 @@ public class EmbeddedMongoDb extends TestWatcher {
     }
 
     @SneakyThrows
+    private int port(EmbeddedMongoDbConfiguration mongoConfiguration) {
+        return mongoConfiguration != null ?
+            mongoConfiguration.port() :
+            getDefaultIntValue(EmbeddedMongoDbConfiguration.class, "port").intValue();
+    }
+
+    @SneakyThrows
     private String absolutePath(final String jsonFile) {
         final URL resource = this.getClass().getClassLoader().getResource(jsonFile);
         if (resource == null)
@@ -116,10 +121,10 @@ public class EmbeddedMongoDb extends TestWatcher {
             return new File(resource.toURI()).getAbsolutePath();
     }
 
-    private IMongodConfig buildMongoConfig() throws IOException {
+    private IMongodConfig buildMongoConfig(int port) throws IOException {
         return new MongodConfigBuilder()
             .version(Version.Main.PRODUCTION)
-            .net(new Net(BIND_IP, PORT, Network.localhostIsIPv6()))
+            .net(new Net(BIND_IP, port, Network.localhostIsIPv6()))
             .build();
     }
 
