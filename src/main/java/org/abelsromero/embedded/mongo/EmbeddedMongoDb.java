@@ -20,6 +20,7 @@ import static org.abelsromero.embedded.mongo.AnnotationHelper.*;
 public class EmbeddedMongoDb extends TestWatcher {
 
     private static final String BIND_IP = "127.0.0.1";
+    private static final Version.Main VERSION = Version.Main.V3_5;
 
     private MongodExecutable executable;
 
@@ -70,7 +71,7 @@ public class EmbeddedMongoDb extends TestWatcher {
                                                 String jsonFile, boolean jsonArray) {
 
         final IMongoImportConfig mongoImportConfig = new MongoImportConfigBuilder()
-            .version(Version.Main.PRODUCTION)
+            .version(VERSION)
             .net(new Net(bindIp, port, Network.localhostIsIPv6()))
             .db(dbName)
             .collection(collection)
@@ -123,7 +124,7 @@ public class EmbeddedMongoDb extends TestWatcher {
 
     private IMongodConfig buildMongoConfig(int port) throws IOException {
         return new MongodConfigBuilder()
-            .version(Version.Main.PRODUCTION)
+            .version(VERSION)
             .net(new Net(BIND_IP, port, Network.localhostIsIPv6()))
             .build();
     }
