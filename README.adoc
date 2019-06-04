@@ -81,7 +81,6 @@ public static EmbeddedMongoDb embeddedMongo = new EmbeddedMongoDb();
 
 The rule is accompanied by two annotations to add additional configuration to each test: `{config-annotation}` and `{import-annotation}`.
 
-
 ==== {config-annotation}
 
 `{config-annotation}` allows customizing the MongoDB instance main aspects.
@@ -93,6 +92,8 @@ Available options are:
 skip (boolean):: test should not start a embedded MongoDB process. (default `false`).
 database (string):: name of the collection to use (default `local`).
 collection (string):: name of the collection to create (default `embedded-test-collection`).
+version (string):: name of the MongoDB version to start.
+Use the same name as the enum values found in `de.flapdoodle.embed.mongo.distribution.Version`.
 
 [source,java,subs=attributes+]
 .Skip configuration example
