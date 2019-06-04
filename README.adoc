@@ -1,6 +1,6 @@
 = Embedded MongoDB test tools
 :icons: font
-:toc:
+:toc: preamble
 :config-annotation: @EmbeddedMongoDbConfiguration
 :import-annotation: @EmbeddedMongoDbImport
 // GitHub customization
