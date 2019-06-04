@@ -39,6 +39,23 @@ public class EmbeddedMongoDbTest {
     }
 
     @Test
+    public void should_start_a_mongodb_instance_with_a_different_version() {
+        // setup
+        final PrintStream originalOut = System.out;
+        final ByteArrayOutputStream newOut = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(newOut));
+        // given
+        final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
+        // when
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().nonDefaultVersionAnnotation()));
+        // then
+        assertThat(newOut.toString()).contains("version v3.4.5");
+        // cleanup
+        mongo.finished(null);
+        System.setOut(originalOut);
+    }
+
+    @Test
     public void should_start_a_mongodb_instance_on_a_non_default_port() {
         // setup
         final PrintStream originalOut = System.out;
@@ -47,7 +64,7 @@ public class EmbeddedMongoDbTest {
         // given
         final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
         // when
-        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().nonStandardPortAnnotation()));
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().nonDefaultPortAnnotation()));
         // then
         assertThat(newOut.toString()).contains("waiting for connections on port");
         // cleanup

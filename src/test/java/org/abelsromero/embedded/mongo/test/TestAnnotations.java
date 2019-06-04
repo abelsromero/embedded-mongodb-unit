@@ -55,7 +55,11 @@ public class TestAnnotations {
         }
 
         @EmbeddedMongoDbConfiguration(port = 10259)
-        void nonStandardPort() {
+        void nonDefaultPort() {
+        }
+
+        @EmbeddedMongoDbConfiguration(version = "V3_4_5")
+        void nonDefaultVersion() {
         }
     }
 
@@ -64,8 +68,12 @@ public class TestAnnotations {
         return getConfigurationAnnotationFrom("skip");
     }
 
-    public EmbeddedMongoDbConfiguration nonStandardPortAnnotation() {
-        return getConfigurationAnnotationFrom("nonStandardPort");
+    public EmbeddedMongoDbConfiguration nonDefaultPortAnnotation() {
+        return getConfigurationAnnotationFrom("nonDefaultPort");
+    }
+
+    public EmbeddedMongoDbConfiguration nonDefaultVersionAnnotation() {
+        return getConfigurationAnnotationFrom("nonDefaultVersion");
     }
 
     public EmbeddedMongoDbImport importSingleJsonAnnotation() {

@@ -20,7 +20,6 @@ import static org.abelsromero.embedded.mongo.AnnotationHelper.*;
 public class EmbeddedMongoDb extends TestWatcher {
 
     private static final String BIND_IP = "127.0.0.1";
-    private static final Version.Main VERSION = Version.Main.V3_5;
 
     private MongodExecutable executable;
 
@@ -38,11 +37,13 @@ public class EmbeddedMongoDb extends TestWatcher {
         if (mongoConfiguration != null && mongoConfiguration.skip()) {
             return;
         }
+
         // Start MongoDB
         int port = port(mongoConfiguration);
+        final String version = version(mongoConfiguration);
         executable = MongodStarter
             .getDefaultInstance()
-            .prepare(buildMongoConfig(port));
+            .prepare(buildMongoConfig(port, version));
         executable.start();
 
         databaseName = databaseName(mongoConfiguration);
@@ -58,7 +59,8 @@ public class EmbeddedMongoDb extends TestWatcher {
             description.getAnnotation(EmbeddedMongoDbImport.class);
 
         if (mongoImport != null && mongoImport.file().length() > 0) {
-            startMongoImport(BIND_IP, port, databaseName, collectionName,
+            startMongoImport(BIND_IP, port, version,
+                databaseName, collectionName,
                 mongoImport.file(),
                 mongoImport == null ? getDefaultBooleanValue(EmbeddedMongoDbImport.class, "jsonArray") : mongoImport.jsonArray()
             );
@@ -67,11 +69,12 @@ public class EmbeddedMongoDb extends TestWatcher {
 
     @SneakyThrows
     private MongoImportProcess startMongoImport(String bindIp, int port,
+                                                String version,
                                                 String dbName, String collection,
                                                 String jsonFile, boolean jsonArray) {
 
         final IMongoImportConfig mongoImportConfig = new MongoImportConfigBuilder()
-            .version(VERSION)
+            .version(Version.valueOf(version))
             .net(new Net(bindIp, port, Network.localhostIsIPv6()))
             .db(dbName)
             .collection(collection)
@@ -114,6 +117,13 @@ public class EmbeddedMongoDb extends TestWatcher {
     }
 
     @SneakyThrows
+    private String version(EmbeddedMongoDbConfiguration mongoConfiguration) {
+        return mongoConfiguration != null ?
+            mongoConfiguration.version() :
+            getDefaultStringValue(EmbeddedMongoDbConfiguration.class, "version");
+    }
+
+    @SneakyThrows
     private String absolutePath(final String jsonFile) {
         final URL resource = this.getClass().getClassLoader().getResource(jsonFile);
         if (resource == null)
@@ -122,9 +132,9 @@ public class EmbeddedMongoDb extends TestWatcher {
             return new File(resource.toURI()).getAbsolutePath();
     }
 
-    private IMongodConfig buildMongoConfig(int port) throws IOException {
+    private IMongodConfig buildMongoConfig(int port, String version) throws IOException {
         return new MongodConfigBuilder()
-            .version(VERSION)
+            .version(Version.valueOf(version))
             .net(new Net(BIND_IP, port, Network.localhostIsIPv6()))
             .build();
     }
