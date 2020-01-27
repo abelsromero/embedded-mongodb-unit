@@ -21,6 +21,6 @@ public @interface EmbeddedMongoDbConfiguration {
     int port() default 27017;
 
     // value aligned with values in de.flapdoodle.embed.mongo.distribution.Version
-    String version() default "V3_5_5";
+    String version() default "V3_6_5";
 
 }
