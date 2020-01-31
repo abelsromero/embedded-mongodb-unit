@@ -30,6 +30,10 @@ public class TestAnnotations {
     @SuppressWarnings("unused")
     class FakeTestClass {
 
+        @EmbeddedMongoDbConfiguration
+        void defaultConfiguration() {
+        }
+
         @EmbeddedMongoDbConfiguration(skip = true)
         void skip() {
         }
@@ -64,7 +68,12 @@ public class TestAnnotations {
     }
 
     @SneakyThrows
-    public EmbeddedMongoDbConfiguration skinAnnotation() {
+    public EmbeddedMongoDbConfiguration defaultEmbeddedConfiguration() {
+        return getConfigurationAnnotationFrom("defaultConfiguration");
+    }
+
+    @SneakyThrows
+    public EmbeddedMongoDbConfiguration skipAnnotation() {
         return getConfigurationAnnotationFrom("skip");
     }
 

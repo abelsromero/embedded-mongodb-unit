@@ -1,8 +1,10 @@
 package org.abelsromero.embedded.mongo;
 
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
+import de.flapdoodle.embed.mongo.MongodExecutable;
+import lombok.SneakyThrows;
 import org.abelsromero.embedded.mongo.test.TestAnnotations;
 import org.bson.Document;
 import org.junit.Test;
@@ -30,9 +32,26 @@ public class EmbeddedMongoDbTest {
         // given
         final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
         // when
-        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", TestAnnotations.test));
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().defaultEmbeddedConfiguration()));
         // then
         assertThat(newOut.toString()).contains("waiting for connections on port");
+        // cleanup
+        mongo.finished(null);
+        System.setOut(originalOut);
+    }
+
+    @Test
+    public void should_not_start_a_mongodb_instance_when_no_config_is_present() {
+        // setup
+        final PrintStream originalOut = System.out;
+        final ByteArrayOutputStream newOut = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(newOut));
+        // given
+        final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
+        // when
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", TestAnnotations.test));
+        // then
+        assertThat(newOut.toString()).doesNotContain("waiting for connections on port");
         // cleanup
         mongo.finished(null);
         System.setOut(originalOut);
@@ -75,13 +94,15 @@ public class EmbeddedMongoDbTest {
     @Test
     public void should_not_start_mongodb_instance_if_annotated_with_mongo_skip() {
         // setup
+        MongodExecutable mongodExecutable = startTestMongo();
+
         final PrintStream originalOut = System.out;
         final ByteArrayOutputStream newOut = new ByteArrayOutputStream();
         System.setOut(new PrintStream(newOut));
         // given
         final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
         // when
-        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().skinAnnotation()));
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().skipAnnotation()));
         // then
         final String output = newOut.toString();
         assertThat(output).doesNotContain("MongoDB starting");
@@ -89,6 +110,7 @@ public class EmbeddedMongoDbTest {
         // cleanup
         mongo.finished(null);
         System.setOut(originalOut);
+        mongodExecutable.stop();
     }
 
     @Test
@@ -96,10 +118,12 @@ public class EmbeddedMongoDbTest {
         // given
         final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
         // when
-        mongo.starting(Description.createTestDescription(this.getClass(), "test_name_init_1", new TestAnnotations().importSingleJsonAnnotation()));
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name_init_1",
+            new TestAnnotations().defaultEmbeddedConfiguration(),
+            new TestAnnotations().importSingleJsonAnnotation()));
         // then
         final MongoCollection<Document> collection = getDefaultCollection();
-        assertThat(collection.count()).isEqualTo(1l);
+        assertThat(collection.countDocuments()).isEqualTo(1l);
         // cleanup
         mongo.finished(null);
     }
@@ -109,10 +133,12 @@ public class EmbeddedMongoDbTest {
         // given
         final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
         // when
-        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().importMultipleJsonAnnotation()));
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name",
+            new TestAnnotations().defaultEmbeddedConfiguration(),
+            new TestAnnotations().importMultipleJsonAnnotation()));
         // then
         final MongoCollection<Document> collection = getDefaultCollection();
-        assertThat(collection.count()).isEqualTo(2l);
+        assertThat(collection.countDocuments()).isEqualTo(2l);
         // cleanup
         mongo.finished(null);
     }
@@ -137,7 +163,9 @@ public class EmbeddedMongoDbTest {
         // given
         final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
         // when
-        mongo.starting(Description.createTestDescription(this.getClass(), "test_name", new TestAnnotations().importMultipleJsonInArrayTrueAnnotation()));
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name",
+            new TestAnnotations().defaultEmbeddedConfiguration(),
+            new TestAnnotations().importMultipleJsonInArrayTrueAnnotation()));
         // then
         final MongoCollection<Document> collection = getDefaultCollection();
         assertThat(collection.count()).isEqualTo(3l);
@@ -164,9 +192,13 @@ public class EmbeddedMongoDbTest {
 
 
     private MongoCollection<Document> getDefaultCollection() {
-        return new MongoClient(HOST, PORT)
+        return MongoClients.create("mongodb://" + HOST + ":" + PORT)
             .getDatabase("local")
             .getCollection("embedded-test-collection");
     }
 
+    @SneakyThrows
+    private MongodExecutable startTestMongo() {
+        return MongoHandler.start("127.0.0.1", 27017, "V4_0_2");
+    }
 }

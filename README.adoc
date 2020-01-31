@@ -124,6 +124,7 @@ Available options are:
 
 [horizontal]
 skip (boolean):: test should not start a embedded MongoDB process. (default `false`).
+Use this to connect to a MongoDB instance started by other means, for example, with https://www.testcontainers.org/[Testcontainers].
 database (string):: name of the collection to use (default `local`).
 collection (string):: name of the collection to create (default `embedded-test-collection`).
 version (string):: name of the MongoDB version to start.
