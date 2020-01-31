@@ -10,7 +10,7 @@ import de.flapdoodle.embed.process.runtime.Network;
 
 import java.io.IOException;
 
-public class MongoStarter {
+public class MongoHandler {
 
     public static MongodExecutable start (String bindIp, int port, String version) throws IOException {
         final MongodExecutable executable = MongodStarter

@@ -2,8 +2,13 @@ package org.abelsromero.embedded.mongo;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
-import de.flapdoodle.embed.mongo.*;
-import de.flapdoodle.embed.mongo.config.*;
+import de.flapdoodle.embed.mongo.MongoImportExecutable;
+import de.flapdoodle.embed.mongo.MongoImportProcess;
+import de.flapdoodle.embed.mongo.MongoImportStarter;
+import de.flapdoodle.embed.mongo.MongodExecutable;
+import de.flapdoodle.embed.mongo.config.IMongoImportConfig;
+import de.flapdoodle.embed.mongo.config.MongoImportConfigBuilder;
+import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import lombok.SneakyThrows;
@@ -12,7 +17,6 @@ import org.junit.runner.Description;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URL;
 
 import static org.abelsromero.embedded.mongo.AnnotationHelper.*;
@@ -34,17 +38,11 @@ public class EmbeddedMongoDb extends TestWatcher {
         final EmbeddedMongoDbConfiguration mongoConfiguration =
             description.getAnnotation(EmbeddedMongoDbConfiguration.class);
 
-        if (mongoConfiguration != null && mongoConfiguration.skip()) {
-            return;
-        }
-
-        // Start MongoDB
         int port = port(mongoConfiguration);
         final String version = version(mongoConfiguration);
-        executable = MongodStarter
-            .getDefaultInstance()
-            .prepare(buildMongoConfig(port, version));
-        executable.start();
+        if (mongoConfiguration != null && !mongoConfiguration.skip()) {
+            executable = MongoHandler.start(BIND_IP, port, version);
+        }
 
         databaseName = databaseName(mongoConfiguration);
         collectionName = collectionName(mongoConfiguration);
@@ -58,12 +56,16 @@ public class EmbeddedMongoDb extends TestWatcher {
         final EmbeddedMongoDbImport mongoImport =
             description.getAnnotation(EmbeddedMongoDbImport.class);
 
-        if (mongoImport != null && mongoImport.file().length() > 0) {
-            startMongoImport(BIND_IP, port, version,
-                databaseName, collectionName,
-                mongoImport.file(),
-                mongoImport == null ? getDefaultBooleanValue(EmbeddedMongoDbImport.class, "jsonArray") : mongoImport.jsonArray()
-            );
+        try {
+            if (mongoImport != null && mongoImport.file().length() > 0) {
+                startMongoImport(BIND_IP, port, version,
+                    databaseName, collectionName,
+                    mongoImport.file(),
+                    mongoImport == null ? getDefaultBooleanValue(EmbeddedMongoDbImport.class, "jsonArray") : mongoImport.jsonArray()
+                );
+            }
+        } catch (Exception e) {
+            System.out.println(e);
         }
     }
 
@@ -105,7 +107,7 @@ public class EmbeddedMongoDb extends TestWatcher {
     @SneakyThrows
     private String databaseName(EmbeddedMongoDbConfiguration mongoConfiguration) {
         return mongoConfiguration != null ?
-            mongoConfiguration.collection() :
+            mongoConfiguration.database() :
             getDefaultStringValue(EmbeddedMongoDbConfiguration.class, "database");
     }
 
@@ -130,13 +132,6 @@ public class EmbeddedMongoDb extends TestWatcher {
             throw new FileNotFoundException("Could not find file: " + jsonFile);
         else
             return new File(resource.toURI()).getAbsolutePath();
-    }
-
-    private IMongodConfig buildMongoConfig(int port, String version) throws IOException {
-        return new MongodConfigBuilder()
-            .version(Version.valueOf(version))
-            .net(new Net(BIND_IP, port, Network.localhostIsIPv6()))
-            .build();
     }
 
 }
