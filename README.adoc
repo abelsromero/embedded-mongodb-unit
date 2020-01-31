@@ -49,18 +49,47 @@ Spring Factory Bean for EmbedMongo (link:https://github.com/jirutka/embedmongo-s
 Handy MongoDB Bean factory to add an embedded MongoDB instance in a Spring Context.
 
 Since none of the above options meet all desired features, this project was created.
-*Free free to comment or contribute in any way.*
+*Fell free to comment or contribute in any way.*
 
-== EmbeddedMongoDb Junit Rule
+== Importing the dependency
+
+The project is available through link:https://jitpack.io/#abelsromero/embedded-mongodb-unit[JitPack].
+To use the master version for example, with maven, just:
+
+. Add JitPack's repository your `pom.xml`.
++
+[source,xml]
+----
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+----
+
+. The projects `master` dependency.
++
+[source,xml]
+----
+<dependency>
+    <groupId>com.github.abelsromero</groupId>
+    <artifactId>embedded-mongodb-unit</artifactId>
+    <version>master-SNAPSHOT</version> <!-- <.> -->
+    <scope>test</scope>
+</dependency>
+----
+<.> Note this version will be cached locally.
+Upon release, delete local artifact.
+
+== Usage
 
 [NOTE]
 ====
 If you are using Spring/Spring-Boot, Junit Rules are initialized after Spring Test Context.
-That means that if a MongoDB connection is attempted during Spring intialitzation, it will fail.
+That means that if a MongoDB connection is attempted during Spring initialization, it will fail.
 Check `Spring Factory Bean for EmbedMongo` in the <<Introduction>> section for more info.
 ====
-
-=== Usage
 
 The simplest way to enable an embedded MongoDB instance for tests is adding is a `@Rule`.
 
@@ -108,7 +137,7 @@ Use the same name as the enum values found in `de.flapdoodle.embed.mongo.distrib
 public void should_connect_to_database() {
     // given
     final StringBuilder sb = new StringBuilder("Hello");
-    // when:
+    // when
     sb.append(" World!!");
     // then
     assertThat(sb.toString()).isEqualTo("Hello World!!");
