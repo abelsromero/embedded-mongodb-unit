@@ -144,6 +144,22 @@ public class EmbeddedMongoDbTest {
     }
 
     @Test
+    public void should_init_collection_with_multiple_documents_from_multiple_files_using_repeated_annotation() {
+        // given
+        final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
+        // when
+        mongo.starting(Description.createTestDescription(this.getClass(), "test_name",
+            new TestAnnotations().defaultEmbeddedConfiguration(),
+            new TestAnnotations().importMultipleJsonsAnnotations()
+        ));
+        // then
+        final MongoCollection<Document> collection = getDefaultCollection();
+        assertThat(collection.countDocuments()).isEqualTo(3l);
+        // cleanup
+        mongo.finished(null);
+    }
+
+    @Test
     public void should_fail_when_importing_documents_in_array_format_with_default_options() {
         // given
         final EmbeddedMongoDb mongo = new EmbeddedMongoDb();
@@ -168,7 +184,7 @@ public class EmbeddedMongoDbTest {
             new TestAnnotations().importMultipleJsonInArrayTrueAnnotation()));
         // then
         final MongoCollection<Document> collection = getDefaultCollection();
-        assertThat(collection.count()).isEqualTo(3l);
+        assertThat(collection.countDocuments()).isEqualTo(3l);
         // cleanup
         mongo.finished(null);
     }
