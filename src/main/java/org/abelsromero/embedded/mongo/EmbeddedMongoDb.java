@@ -12,12 +12,18 @@ import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import lombok.SneakyThrows;
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.abelsromero.embedded.mongo.AnnotationHelper.*;
 
@@ -53,21 +59,45 @@ public class EmbeddedMongoDb extends TestWatcher {
             db.createCollection(collectionName);
         }
 
-        final EmbeddedMongoDbImport mongoImport =
-            description.getAnnotation(EmbeddedMongoDbImport.class);
 
         try {
-            if (mongoImport != null && mongoImport.file().length() > 0) {
-                startMongoImport(BIND_IP, port, version,
-                    databaseName, collectionName,
-                    mongoImport.file(),
-                    mongoImport == null ? getDefaultBooleanValue(EmbeddedMongoDbImport.class, "jsonArray") : mongoImport.jsonArray()
-                );
+            final EmbeddedMongoDbImport mongoImport = getImportAnnotations(description);
+
+            if (mongoImport != null && mongoImport.files().length > 0) {
+
+                final List<String> filesToImport = Arrays.stream(mongoImport.files())
+                    .filter(StringUtils::isNotBlank)
+                    .map(this::absolutePath)
+                    .collect(Collectors.toList());
+
+                if (filesToImport.size() > 0) {
+                    final Path tempFile = mergeFilesToImport(filesToImport);
+
+                    startMongoImport(BIND_IP, port, version,
+                        databaseName, collectionName,
+                        tempFile.toFile().getAbsolutePath(),
+                        mongoImport == null ? getDefaultBooleanValue(EmbeddedMongoDbImport.class, "jsonArray") : mongoImport.jsonArray()
+                    );
+                }
             }
         } catch (Exception e) {
             System.out.println(e);
         }
     }
+
+    private Path mergeFilesToImport(List<String> filesToImport) throws IOException {
+        final Path tempFile = Files.createTempFile("org.abelsromero.embedded.mongo.", ".temp");
+        final OutputStream tempOs = Files.newOutputStream(tempFile);
+        for (String file : filesToImport) {
+            IOUtils.copy(new FileInputStream(file), tempOs);
+        }
+        return tempFile;
+    }
+
+    private EmbeddedMongoDbImport getImportAnnotations(Description description) {
+        return description.getAnnotation(EmbeddedMongoDbImport.class);
+    }
+
 
     @SneakyThrows
     private MongoImportProcess startMongoImport(String bindIp, int port,
@@ -75,6 +105,9 @@ public class EmbeddedMongoDb extends TestWatcher {
                                                 String dbName, String collection,
                                                 String jsonFile, boolean jsonArray) {
 
+        System.out.println("-------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------------");
         final IMongoImportConfig mongoImportConfig = new MongoImportConfigBuilder()
             .version(Version.valueOf(version))
             .net(new Net(bindIp, port, Network.localhostIsIPv6()))
@@ -83,7 +116,7 @@ public class EmbeddedMongoDb extends TestWatcher {
             .upsert(false)
             .dropCollection(true)
             .jsonArray(jsonArray)
-            .importFile(absolutePath(jsonFile))
+            .importFile(jsonFile)
             .build();
 
         final MongoImportExecutable mongoImportExecutable = MongoImportStarter.getDefaultInstance().prepare(mongoImportConfig);

@@ -38,23 +38,27 @@ public class TestAnnotations {
         void skip() {
         }
 
-        @EmbeddedMongoDbImport(file = "single_document_data.json")
+        @EmbeddedMongoDbImport(files = "single_document_data.json")
         void importSingleDocument() {
         }
 
-        @EmbeddedMongoDbImport(file = "multiple_document_data.json")
+        @EmbeddedMongoDbImport(files = {"single_document_data.json", "multiple_document_data.json"})
+        void importMultipleJsons() {
+        }
+
+        @EmbeddedMongoDbImport(files = "multiple_document_data.json")
         void importMultipleDocuments() {
         }
 
-        @EmbeddedMongoDbImport(file = "multiple_document_data_in_array.json")
+        @EmbeddedMongoDbImport(files = "multiple_document_data_in_array.json")
         void importMultipleDocumentsInArray() {
         }
 
-        @EmbeddedMongoDbImport(file = "multiple_document_data_in_array.json", jsonArray = true)
+        @EmbeddedMongoDbImport(files = "multiple_document_data_in_array.json", jsonArray = true)
         void importMultipleDocumentsInArrayTrue() {
         }
 
-        @EmbeddedMongoDbImport(file = "non_existent_file.json")
+        @EmbeddedMongoDbImport(files = "non_existent_file.json")
         void nonExistentFile() {
         }
 
@@ -91,6 +95,10 @@ public class TestAnnotations {
 
     public EmbeddedMongoDbImport importMultipleJsonAnnotation() {
         return getImportAnnotationFrom("importMultipleDocuments");
+    }
+
+    public EmbeddedMongoDbImport importMultipleJsonsAnnotations() {
+        return getImportAnnotationFrom("importMultipleJsons");
     }
 
     public EmbeddedMongoDbImport importMultipleJsonInArrayAnnotation() {

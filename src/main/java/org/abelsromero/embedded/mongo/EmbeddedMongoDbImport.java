@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface EmbeddedMongoDbImport {
 
-    String file() default "";
+    String[] files();
 
     boolean jsonArray() default false;
 
